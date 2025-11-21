@@ -1,0 +1,124 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
+public class MatrizAdjunta {
+    // lee la matriz desde el archivo
+    public static double[][] leerMatriz(String nombreArchivo) {
+        try (BufferedReader br = new BufferedReader(new FileReader(nombreArchivo))) {
+            String linea;
+            int filas = 0;
+
+            // contara las filas
+            while ((linea = br.readLine()) != null) {
+                filas++;
+            }
+
+            double[][] matriz = new double[filas][];
+            br.close();
+
+            // lo lee de nuevo para guardar datos
+            BufferedReader br2 = new BufferedReader(new FileReader(nombreArchivo));
+            int i = 0;
+            while ((linea = br2.readLine()) != null) {
+                String[] valores = linea.trim().split(" ");
+                matriz[i] = new double[valores.length];
+                for (int j = 0; j < valores.length; j++) {
+                    matriz[i][j] = Double.parseDouble(valores[j]);
+                }
+                i++;
+            }
+            br2.close();
+
+            return matriz;
+
+        } catch (IOException | NumberFormatException e) {
+            System.out.println("error al leer archivo: " + e.getMessage());
+            return null;
+        }
+    }
+
+    // aqui calcula la matriz adjunta (cofactores transpuestos)
+    public static double[][] matrizAdjunta(double[][] matriz) {
+        int n = matriz.length;
+
+        if (n != matriz[0].length) return null; // Verificar que sea cuadrada
+
+        double[][] cofactores = new double[n][n];
+
+        // calcula los cofactores
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                cofactores[i][j] = Math.pow(-1, i + j) * determinante(matrizMenor(matriz, i, j));
+            }
+        }
+
+        // transpone es decir (adjunta = matriz de cofactores transpuesta)
+        double[][] adjunta = new double[n][n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                adjunta[i][j] = cofactores[j][i]; 
+            }
+        }
+
+        return adjunta;
+    }
+
+    // aqui se obtiene la matriz menor
+    public static double[][] matrizMenor(double[][] matriz, int fila, int col) {
+        int n = matriz.length;
+        double[][] menor = new double[n - 1][n - 1];
+        int r = 0;
+
+        for (int i = 0; i < n; i++) {
+            if (i == fila) continue;
+            int c = 0;
+            for (int j = 0; j < n; j++) {
+                if (j == col) continue;
+                menor[r][c] = matriz[i][j];
+                c++;
+            }
+            r++;
+        }
+        return menor;
+    }
+
+    // se determina la matriz 
+    public static double determinante(double[][] matriz) {
+        int n = matriz.length;
+        if (n == 1) return matriz[0][0];
+        if (n == 2) return (matriz[0][0] * matriz[1][1]) - (matriz[0][1] * matriz[1][0]);
+
+        double det = 0;
+        for (int j = 0; j < n; j++) {
+            det += matriz[0][j] * Math.pow(-1, 0 + j) * determinante(matrizMenor(matriz, 0, j));
+        }
+        return det;
+    }
+
+    // imprime la matriz
+    public static void imprimirMatriz(double[][] matriz) {
+        for (double[] fila : matriz) {
+            for (double valor : fila) {
+                System.out.printf("%.2f ", valor);
+            }
+            System.out.println();
+        }
+    }
+
+    // guarda la matriz en otro archivo
+    public static void escribirArchivo(double[][] matriz, String nombreArchivo) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(nombreArchivo))) {
+            for (double[] fila : matriz) {
+                for (double valor : fila) {
+                    bw.write(String.format("%.4f ", valor));
+                }
+                bw.newLine();
+            }
+        } catch (IOException e) {
+            System.out.println("error al escribir archivo: " + e.getMessage());
+        }
+    }
+}
